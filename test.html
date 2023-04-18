@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Music Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        async function makeRequest() {
+            try {
+                const response = await fetch('https://c3vrby9lxa.execute-api.us-east-1.amazonaws.com/testget/album', {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResults(data);
+                } else {
+                    alert('Request failed.  Returned status of ' + response.status);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Request failed: ' + error.message);
+            }
+        }
+        function signOut() {
+            sessionStorage.removeItem('isLoggedIn');
+            window.location.href = 'signin.html';
+            }
+
+        function displayResults(data) {
+            const resultDiv = document.getElementById('results');
+            resultDiv.innerHTML = '';
+
+            data.sort((a, b) => a.Rank - b.Rank).forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('grid-item');
+                itemDiv.setAttribute('data-rank', item.Rank);
+                itemDiv.innerHTML = `
+                    <p><strong>Rank:</strong> ${item.Rank}</p>
+                    <p><strong>Album:</strong> <span class="album">${item.Album}</span></p>
+                    <p><strong>Artist:</strong> <span class="artist">${item.Artist}</span></p>
+                    <p><strong>Genre:</strong> <span class="genre">${item.Genre}</span></p>
+                    <p><strong>Year:</strong> <span class="year">${item.Year}</span></p>
+                    <button class="delete-button" onclick="deleteAlbum(${item.Rank})">Delete</button>
+                    <button class="edit-button" onclick="updateAlbum(${item.Rank})">Edit</button>
+                `;
+                resultDiv.appendChild(itemDiv);
+            });
+        }
+
+        async function deleteAlbum(rank) {
+            try {
+                const response = await fetch(`https://c3vrby9lxa.execute-api.us-east-1.amazonaws.com/testget/album?rank=${rank}`, {
+                    method: 'DELETE',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Album deleted successfully!');
+                    makeRequest();
+                } else {
+                    alert('Request failed. Returned status of ' + response.status);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Request failed: ' + error.message);
+            }
+        }
+
+        async function updateAlbum(rank) {
+            const itemDiv = document.querySelector(`div[data-rank='${rank}']`);
+            const currentValues = {
+                Album: itemDiv.querySelector('.album').textContent,
+                Artist: itemDiv.querySelector('.artist').textContent,
+                Genre: itemDiv.querySelector('.genre').textContent,
+                Year: itemDiv.querySelector('.year').textContent
+            };
+
+            itemDiv.innerHTML = `
+                <p><strong>Rank:</strong> ${rank}</p>
+                <p><strong>Album:</strong> <input id="album-${rank}" class="new-album" value="${currentValues.Album}" /></p>
+                <p><strong>Artist:</strong> <input id="artist-${rank}" class="new-artist" value="${currentValues.Artist}" /></p>
+                <p><strong>Genre:</strong> <input id="genre-${rank}" class="new-genre" value="${currentValues.Genre}" /></p>
+                <p><strong>Year:</strong> <input id="year-${rank}" class="new-year" value="${currentValues.Year}" /></p>
+                <button onclick="submitUpdate(${rank})">Update</button>
+                <button onclick="cancelUpdate(${rank})">Cancel</button>
+            `;
+        }
+        async function cancelUpdate(rank) {
+            const itemDiv = document.querySelector(`div[data-rank='${rank}']`);
+            const currentValues = {
+                Album: itemDiv.querySelector('.new-album').defaultValue,
+                Artist: itemDiv.querySelector('.new-artist').defaultValue,
+                Genre: itemDiv.querySelector('.new-genre').defaultValue,
+                Year: itemDiv.querySelector('.new-year').defaultValue
+    };
+
+    itemDiv.innerHTML = `
+        <p><strong>Rank:</strong> ${rank}</p>
+        <p><strong>Album:</strong> <span class="album">${currentValues.Album}</span></p>
+        <p><strong>Artist:</strong> <span class="artist">${currentValues.Artist}</span></p>
+        <p><strong>Genre:</strong> <span class="genre">${currentValues.Genre}</span></p>
+        <p><strong>Year:</strong> <span class="year">${currentValues.Year}</span></p>
+        <button class="delete-button" onclick="deleteAlbum(${rank})">Delete</button>
+        <button class="edit-button" onclick="updateAlbum(${rank})">Edit</button>
+    `;
+}
+
+async function submitUpdate(rank) {
+    const updatedFields = {};
+    const albumInput = document.getElementById(`album-${rank}`);
+    const artistInput = document.getElementById(`artist-${rank}`);
+    const genreInput = document.getElementById(`genre-${rank}`);
+    const yearInput = document.getElementById(`year-${rank}`);
+
+    if (albumInput.value !== albumInput.defaultValue) {
+        updatedFields.Album = albumInput.value;
+    }
+    if (artistInput.value !== artistInput.defaultValue) {
+        updatedFields.Artist = artistInput.value;
+    }
+    if (genreInput.value !== genreInput.defaultValue) {
+        updatedFields.Genre = genreInput.value;
+    }
+    if (yearInput.value !== yearInput.defaultValue) {
+        const yearValue = parseInt(yearInput.value, 10);
+        if (yearValue >= 1 && yearValue <= 2023) {
+            updatedFields.Year = yearValue;
+        } else {
+            alert('Year should be between 1 and 2023.');
+            return;
+        }
+    }
+
+    console.log('updatedFields:', updatedFields);
+
+    if (Object.keys(updatedFields).length === 0) {
+        const itemDiv = document.querySelector(`div[data-rank='${rank}']`);
+        const currentValues = {
+            Album: itemDiv.querySelector('.new-album').defaultValue,
+            Artist: itemDiv.querySelector('.new-artist').defaultValue,
+            Genre: itemDiv.querySelector('.new-genre').defaultValue,
+            Year: itemDiv.querySelector('.new-year').defaultValue
+        };
+
+        itemDiv.innerHTML = `
+            <p><strong>Rank:</strong> ${rank}</p>
+            <p><strong>Album:</strong> <span class="album">${currentValues.Album}</span></p>
+            <p><strong>Artist:</strong> <span class="artist">${currentValues.Artist}</span></p>
+            <p><strong>Genre:</strong> <span class="genre">${currentValues.Genre}</span></p>
+            <p><strong>Year:</strong> <span class="year">${currentValues.Year}</span></p>
+            <button class="delete-button" onclick="deleteAlbum(${rank})">Delete</button>
+            <button class="edit-button" onclick="updateAlbum(${rank})">Edit</button>
+        `;
+
+        return;
+    }
+
+    try {
+        const response = await fetch(`https://c3vrby9lxa.execute-api.us-east-1.amazonaws.com/testget/album?rank=${rank}`, {
+            method: 'PUT',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedFields),
+        });
+
+        console.log('response:', response);
+
+        if (response.ok) {
+            alert('Album updated successfully');
+            makeRequest();
+        } else {
+            alert('Request failed. Returned status of ' + response.status);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Request failed: ' + error.message);
+    }
+}
+
+
+        window.onload = makeRequest;
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            alert("Sign in or Sign up first");
+            window.location.href = 'signin.html';
+         }
+
+    </script>
+</head>
+<body>
+    <button id="signout-button" onclick="signOut()">Sign Out</button>
+    <div class="center">
+        <h1>Music Dashboard</h1>
+        <a href="addalbum.html" class="add-album-button">Add Album</a>
+    </div>   
+    <div id="results" class="grid-container"></div>
+</body>

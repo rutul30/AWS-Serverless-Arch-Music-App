@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Album</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+async function addAlbum(event) {
+    event.preventDefault();
+
+    const form = document.querySelector('form');
+    const formData = new FormData(form);
+    const body = {};
+    formData.forEach((value, key) => {
+        const pascalCaseKey = key.charAt(0).toUpperCase() + key.slice(1);
+        if (key === 'rank' || key === 'year') {
+            body[pascalCaseKey] = parseInt(value, 10);
+        } else {
+            body[pascalCaseKey] = value;
+        }
+    });
+    
+    if (body.Rank <= 0) {
+        alert('Rank should be greater than 0.');
+        return;
+    }
+
+    try {
+        const existingAlbumsResponse = await fetch('https://c3vrby9lxa.execute-api.us-east-1.amazonaws.com/testget/album', {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (existingAlbumsResponse.ok) {
+            const existingAlbums = await existingAlbumsResponse.json();
+            if (existingAlbums.some(album => album.Rank === body.Rank)) {
+                alert('Rank already exists. Delete the existing album before adding a new one with the same rank.');
+                return;
+            }
+        } else {
+            alert('Failed to fetch existing albums. Returned status of ' + existingAlbumsResponse.status);
+            return;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to fetch existing albums: ' + error.message);
+        return;
+    }
+
+    if (body.Year < 1 || body.Year > 2023) {
+        alert('Year should be between 1 and 2023.');
+        return;
+    }
+
+    console.log('Request Body:', body);
+
+    try {
+        const response = await fetch('https://c3vrby9lxa.execute-api.us-east-1.amazonaws.com/testget/album', {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (response.ok) {
+            alert('Album added successfully!');
+            window.location.href = 'test.html';
+        } else {
+            const errorData = await response.json();
+            console.error('Server error:', errorData);
+            alert('Request failed. Returned status of ' + response.status + '. Message: ' + errorData.message);
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Request failed: ' + error.message);
+    }
+}
+
+if (!sessionStorage.getItem('isLoggedIn')) {
+    alert("Sign in or Sign up first");
+    window.location.href = 'signin.html';
+}
+
+  </script>
+</head>
+<body>
+  <div class="center">
+  <h1>Add Album</h1>
+  <form id="album-form" class="add-album-form" onsubmit="addAlbum(event)">
+    <div class="form-row">
+        <label for="rank">Rank:</label>
+        <input type="number" id="rank" name="rank" required min="1">
+    </div>
+    <div class="form-row">
+        <label for="album">Album:</label>
+        <input type="text" id="album" name="album" required>
+    </div>
+    <div class="form-row">
+        <label for="artist">Artist:</label>
+        <input type="text" id="artist" name="artist" required>
+    </div>
+    <div class="form-row">
+        <label for="genre">Genre:</label>
+        <input type="text" id="genre" name="genre" required>
+    </div>
+    <div class="form-row">
+        <label for="year">Year:</label>
+        <input type="number" id="year" name="year" required>
+    </div>
+    <br>
+
+    <div class="button-group">
+        <button type="submit" style="display: inline-block;">Add</button>
+        <button type="button" onclick="window.location.href='test.html'" style="display: inline-block;">Cancel</button>
+    </div>
+
+  </form>

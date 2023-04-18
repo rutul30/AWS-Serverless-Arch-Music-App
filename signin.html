@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sign In</title>
+    <link rel="stylesheet" type="text/css" href="newstyles.css" media="screen">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.967.0.min.js"></script> 
+    <script src="https://unpkg.com/amazon-cognito-identity-js@4.6.0/dist/amazon-cognito-identity.min.js"></script>
+    <script src="auth.js"></script>
+</head>
+
+<body>
+    <div class="center">
+        <h1>Sign In</h1>
+        <form id="signin-form">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="text" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Sign In</button>
+        </form>
+        <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
+        <p class="error-message" id="signin-error" style="display:none;"></p>
+    </div>
+
+    <script>
+        $(function() {
+            $('#signin-form').submit(function(event) {
+                event.preventDefault();
+                var email = $('#email').val();
+                var password = $('#password').val();
+                signIn(email, password, function() {
+                    window.location.href = 'test.html';
+                }, function(errorMessage) {
+                    $('#signin-error').text(errorMessage);
+                    $('#signin-error').show();
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

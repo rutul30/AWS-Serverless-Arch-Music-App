@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <link rel="stylesheet" type="text/css" href="newstyles.css" media="screen">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.967.0.min.js"></script>
+    <script src="https://unpkg.com/amazon-cognito-identity-js@4.6.0/dist/amazon-cognito-identity.min.js"></script>
+    <script src="auth.js"></script>
+</head>
+
+<body>
+    <div class="center">
+        <h1>Sign Up</h1>
+        <form id="signup-form">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Sign Up</button>
+        </form>
+        <p class="error-message" id="signup-error" style="display:none;"></p>
+        <p>Already have an account? <a href="signin.html">Login here</a></p>
+    </div>
+
+    <script>
+        $(function() {
+            $('#signup-form').submit(function(event) {
+                event.preventDefault();
+                var username = $('#username').val();
+                var email = $('#email').val();
+                var password = $('#password').val();
+                signUp(username, email, password, function(signUpResult) {
+                    localStorage.setItem('signUpResult', JSON.stringify(signUpResult));
+                    window.location.href = 'otp.html';
+                }, function(errorMessage) {
+                    $('#signup-error').text(errorMessage);
+                    $('#signup-error').show();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

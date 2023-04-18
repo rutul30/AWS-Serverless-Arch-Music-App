@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Email</title>
+    <link rel="stylesheet" type="text/css" href="newstyles.css" media="screen">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.967.0.min.js"></script>
+    <script src="https://unpkg.com/amazon-cognito-identity-js@4.6.0/dist/amazon-cognito-identity.min.js"></script>
+    <script src="auth.js"></script>
+</head>
+
+<body>
+    <div class="center">
+        <h1>Verify Email</h1>
+        <form id="verify-form">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="otp">Verification Code:</label>
+                <input type="text" id="otp" name="otp" required>
+            </div>
+            <button type="submit">Verify</button>
+        </form>
+        <p class="error-message" id="verify-error" style="display:none;"></p>
+    </div>
+    
+
+    <script>
+        $(function() {
+            var signUpResult = JSON.parse(localStorage.getItem('signUpResult')).user;
+
+            $('#verify-form').submit(function(event) {
+                event.preventDefault();
+                var otp = $('#otp').val();
+                verifyEmail(signUpResult, otp, function() {
+                    localStorage.removeItem('signUpResult');
+                    window.location.href = 'signin.html';
+                }, function(errorMessage) {
+                    $('#verify-error').text("Invalid code. Try again.");
+                    $('#verify-error').show();
+                });
+            });
+        });
+
+    </script>
+</body>
+
+</html>
